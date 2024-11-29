@@ -105,14 +105,7 @@ trainControl <- trainControl(
 metric <- "ROC"
 
 # Train model with cross-validation
-glm_model <- train(
-  Class ~ .,
-  data = X_train, 
-  method = "glm",
-  family = "binomial",
-  trControl = trainControl,
-  metric = metric
-)
+glm_model <- train( Class ~ .,data = X_train,method = "glm",family = "binomial",trControl = trainControl,metric = metric)
 
 summary (glm_model)
 
@@ -123,18 +116,13 @@ print(glm_model$results)
 # Make predictions on validation set
 predictions <- predict(glm_model, newdata = as.data.frame(X_validation))
 confusion_matrix <- confusionMatrix(predictions, y_validation)
+print("Confusion Matrix and Statistics glm:")
 print(confusion_matrix)
 
 
 # glmnet
 # Train model with cross-validation
-glmnet_model <- train(
-  Class ~ .,
-  data = X_train,
-  method = "glmnet",
-  trControl = trainControl,
-  metric = "ROC"
-)
+glmnet_model <- train(Class ~ .,data = X_train,method ="glmnet",trControl = trainControl,metric = "ROC")
 
 summary (glmnet_model)
 
@@ -147,35 +135,57 @@ print(glmnet_model)
 # Make predictions
 predictions <- predict(glmnet_model, newdata = as.data.frame(X_validation))
 confusion_matrix <- confusionMatrix(predictions, y_validation)
-print("\nConfusion Matrix and Statistics:")
+print("Confusion Matrix and Statistics glmnet:")
 print(confusion_matrix)
 
 # glmnet tuned
-# Set up tuning grid for glmnet
-tuneGrid <- expand.grid(
-  alpha = seq(0, 1, by = 0.1), # needs tuning
-  lambda = seq(0.0001, 0.1, length = 10) # needs tuning
-)
+# Set up tuning grid for glmnet ridge
+tuneGrid <- expand.grid(alpha = seq(0, 1, by = 0.1),lambda = seq(0.0001, 0.1, length = 10))
 
-# Train the tuned glmnet model
+# Train the tuned glmnet model ridge
 set.seed(123)  # for reproducibility
-glmnet_tuned <- train(
-  Class ~ .,
-  data = X_train,
-  method = "glmnet",
-  trControl = trainControl,
-  tuneGrid = tuneGrid,
-  metric = "ROC"
-)
+glmnet_tuned_r <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid,metric = "ROC")
 
-summary (glmnet_model)
+summary (glmnet_tuned_r)
 
-# Make predictions using X_validation (not y_validation)
-predictions <- predict(glmnet_tuned, newdata = X_validation)
-prob_predictions <- predict(glmnet_tuned, newdata = X_validation, type = "prob")
+# Make predictions
+predictions <- predict(glmnet_tuned_r, newdata = X_validation)
+prob_predictions <- predict(glmnet_tuned_r, newdata = X_validation, type = "prob")
 
 # Create confusion matrix
 confusion_matrix <- confusionMatrix(predictions, y_validation)
-print("\nConfusion Matrix and Statistics:")
+print("Confusion Matrix and Statistics ridge:")
 print(confusion_matrix)
 
+# Set up tuning grid for glmnet lasso
+tuneGrid <- expand.grid(alpha = seq(1, 1, by = 0.1),lambda = seq(0.0001, 0.1, length = 10))
+
+# Train the tuned glmnet model lasso
+set.seed(123)  # for reproducibility
+glmnet_tuned_l <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid,metric = "ROC")
+
+summary (glmnet_tuned_l)
+
+# Make predictions
+predictions <- predict(glmnet_tuned_l, newdata = X_validation)
+prob_predictions <- predict(glmnet_tuned_l, newdata = X_validation, type = "prob")
+
+# Create confusion matrix
+confusion_matrix <- confusionMatrix(predictions, y_validation)
+print("Confusion Matrix and Statistics lasso:")
+print(confusion_matrix)
+
+# Train the tuned glmnet model elastic net
+set.seed(123)  # for reproducibility
+glmnet_tuned_e <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid,metric = "ROC")
+
+summary (glmnet_tuned_e)
+
+# Make predictions
+predictions <- predict(glmnet_tuned_e, newdata = X_validation)
+prob_predictions <- predict(glmnet_tuned_e, newdata = X_validation, type = "prob")
+
+# Create confusion matrix
+confusion_matrix <- confusionMatrix(predictions, y_validation)
+print("Confusion Matrix and Statistics Elastic net:")
+print(confusion_matrix)
