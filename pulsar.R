@@ -14,6 +14,32 @@ pulsar <- read.csv("HTRU_2.csv")
 
 str(pulsar)
 class(pulsar)
+print("Overall class distribution:")
+table(pulsar$X0)
+prop.table(table(pulsar$X0)) * 100 
+
+# Separate majority and minority classes
+majority_class <- pulsar[pulsar$X0 == 0, ]
+minority_class <- pulsar[pulsar$X0 == 1, ]
+
+# Random upsampling of minority class to match majority class
+set.seed(123)
+minority_upsampled <- minority_class[sample(nrow(minority_class), 
+                                            size = nrow(majority_class), 
+                                            replace = TRUE), ]
+
+# Combine majority class with upsampled minority class
+balanced_pulsar <- rbind(majority_class, minority_upsampled)
+
+# Shuffle the balanced dataset
+pulsar <- balanced_pulsar[sample(nrow(balanced_pulsar)), ]
+
+# Check new class distribution
+print("\nBalanced class distribution:")
+table(pulsar$X0)
+prop.table(table(pulsar$X0)) * 100
+
+
 
 # Number of missing values
 
@@ -153,3 +179,4 @@ prob_predictions <- predict(glmnet_tuned, newdata = X_validation, type = "prob")
 confusion_matrix <- confusionMatrix(predictions, y_validation)
 print("\nConfusion Matrix and Statistics:")
 print(confusion_matrix)
+
