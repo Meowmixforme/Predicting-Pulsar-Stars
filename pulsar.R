@@ -136,6 +136,8 @@ glmnet_model <- train(
   metric = "ROC"
 )
 
+summary (glmnet_model)
+
 # Print results
 print("Best tuning parameters:")
 print(glmnet_model$bestTune)
@@ -165,6 +167,8 @@ glmnet_tuned <- train(
   tuneGrid = tuneGrid,
   metric = "ROC"
 )
+
+summary (glmnet_model)
 
 # Make predictions using X_validation (not y_validation)
 predictions <- predict(glmnet_tuned, newdata = X_validation)
