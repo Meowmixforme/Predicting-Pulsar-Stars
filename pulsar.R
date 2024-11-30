@@ -26,7 +26,7 @@ colSums(is.na(pulsar))
 
 # Preprocessing
 
-# Split the data into x and y
+# Split the data into x and y to split features from target
 y <- pulsar$X0 
 X <- subset(pulsar, select = -X0)
 
@@ -140,13 +140,13 @@ print(confusion_matrix)
 
 # glmnet tuned
 # Set up tuning grid for glmnet ridge
-tuneGrid <- expand.grid(alpha = seq(0, 1, by = 0.1),lambda = seq(0.0001, 0.1, length = 10))
+tuneGrid <- expand.grid(alpha = seq(0, 1, by = 0.4),lambda = seq(0.0001, 0.1, length = 10)) # Best settings
 
 # Train the tuned glmnet model ridge
 set.seed(123)  # for reproducibility
 glmnet_tuned_r <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid,metric = "ROC")
 
-summary (glmnet_tuned_r)
+#summary (glmnet_tuned_r)
 
 # Make predictions
 predictions <- predict(glmnet_tuned_r, newdata = X_validation)
