@@ -158,7 +158,7 @@ print("Confusion Matrix and Statistics ridge:")
 print(confusion_matrix)
 
 # Set up tuning grid for glmnet lasso
-tuneGrid <- expand.grid(alpha = seq(1, 1, by = 0.1),lambda = seq(0.0001, 0.1, length = 10))
+tuneGrid <- expand.grid(alpha = seq(1, 1, by = 0.1),lambda = seq(0.0001, 0.1, length = 10)) #
 
 # Train the tuned glmnet model lasso
 set.seed(123)  # for reproducibility
