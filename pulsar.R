@@ -90,6 +90,13 @@ y_validation <- factor(y_validation, levels = c(0, 1), labels = c("Class0", "Cla
 # Prepare validation data
 X_validation <- as.data.frame(X_validation)
 
+
+# feature selection
+
+
+
+
+
 # Training
 
 # Set up cross-validation parameters
@@ -138,13 +145,13 @@ confusion_matrix <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics glmnet:")
 print(confusion_matrix)
 
-# glmnet tuned
+# glmnet ridge tuned
 # Set up tuning grid for glmnet ridge
-tuneGrid <- expand.grid(alpha = seq(0, 1, by = 0.4),lambda = seq(0.0001, 0.1, length = 10)) # Best settings
+tuneGrid_r <- expand.grid(alpha = seq(0, 1, by = 0.4),lambda = seq(0.01, 0.001, length = 10)) # Best settings
 
 # Train the tuned glmnet model ridge
 set.seed(123)  # for reproducibility
-glmnet_tuned_r <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid,metric = "ROC")
+glmnet_tuned_r <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid_r,metric = "ROC")
 
 #summary (glmnet_tuned_r)
 
@@ -157,12 +164,13 @@ confusion_matrix <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics ridge:")
 print(confusion_matrix)
 
+# # glmnet lasso tuned
 # Set up tuning grid for glmnet lasso
-tuneGrid <- expand.grid(alpha = seq(1, 1, by = 0.1),lambda = seq(0.0001, 0.1, length = 10)) #
+tuneGrid_l <- expand.grid(alpha = seq(1, 1, by = 0.1),lambda = seq(0.1, 0.01, length = 10)) # Best settings
 
 # Train the tuned glmnet model lasso
 set.seed(123)  # for reproducibility
-glmnet_tuned_l <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid,metric = "ROC")
+glmnet_tuned_l <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid_l,metric = "ROC")
 
 summary (glmnet_tuned_l)
 
@@ -175,9 +183,13 @@ confusion_matrix <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics lasso:")
 print(confusion_matrix)
 
+# glmnet elastic net tuned
+# Set up tuning grid for glmnet elastic
+tuneGrid_e <- expand.grid(alpha = seq(0.5, 1, by = 0.3),lambda = seq(0.1, 0.001, length = 10)) # Best settings
+
 # Train the tuned glmnet model elastic net
 set.seed(123)  # for reproducibility
-glmnet_tuned_e <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid,metric = "ROC")
+glmnet_tuned_e <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid_e,metric = "ROC")
 
 summary (glmnet_tuned_e)
 
@@ -189,3 +201,7 @@ prob_predictions <- predict(glmnet_tuned_e, newdata = X_validation, type = "prob
 confusion_matrix <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics Elastic net:")
 print(confusion_matrix)
+
+# SVM
+
+
