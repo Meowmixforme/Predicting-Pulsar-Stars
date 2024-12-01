@@ -202,6 +202,46 @@ confusion_matrix <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics Elastic net:")
 print(confusion_matrix)
 
+# K-NN
+
+# KNN-specific cross-validation
+trainControl <- trainControl(method = "repeatedcv",number = 10,repeats = 3,classProbs = TRUE,summaryFunction = twoClassSummary)
+
+# KNN
+knn_model <- train(  Class ~ .,data = X_train,method = "knn",trControl = trainControl,metric = "ROC")
+
+summary (knn_model)
+
+# Make predictions
+predictions <- predict(knn_model, newdata = X_validation)
+prob_predictions <- predict(knn_model, newdata = X_validation, type = "prob")
+
+# Create confusion matrix
+confusion_matrix <- confusionMatrix(predictions, y_validation)
+print("Confusion Matrix and Statistics K-NN:")
+print(confusion_matrix)
+
+# K-NN tuned
+
+# KNN-specific cross-validation
+trainControl <- trainControl(method = "repeatedcv",number = 10,repeats = 3,classProbs = TRUE,summaryFunction = twoClassSummary)
+
+# Create tuning grid for KNN
+tuneGrid <- expand.grid(k = seq(1, 30, by = 2))
+
+knn_model <- train(Class ~ .,data = X_train,method = "knn",trControl = trainControl,tuneGrid = expand.grid(k = seq(1, 30, by = 2)),metric = "ROC")
+
+summary (knn_model) # try pca
+
+# Make predictions
+predictions <- predict(knn_model, newdata = X_validation)
+prob_predictions <- predict(knn_model, newdata = X_validation, type = "prob")
+
+# Create confusion matrix
+confusion_matrix <- confusionMatrix(predictions, y_validation)
+print("Confusion Matrix and Statistics K-NN tuned:")
+print(confusion_matrix)
+
 # SVM
 
 
