@@ -132,6 +132,7 @@ print(confusion_matrix)
 glmnet_model <- train(Class ~ .,data = X_train,method ="glmnet",trControl = trainControl,metric = "ROC")
 
 summary (glmnet_model)
+plot(glmnet_model)
 
 # Print results
 print("Best tuning parameters:")
@@ -153,7 +154,8 @@ tuneGrid_r <- expand.grid(alpha = seq(0, 1, by = 0.4),lambda = seq(0.01, 0.001, 
 set.seed(123)  # for reproducibility
 glmnet_tuned_r <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid_r,metric = "ROC")
 
-#summary (glmnet_tuned_r)
+summary (glmnet_tuned_r)
+plot(glmnet_tuned_r)
 
 # Make predictions
 predictions <- predict(glmnet_tuned_r, newdata = X_validation)
@@ -173,6 +175,7 @@ set.seed(123)  # for reproducibility
 glmnet_tuned_l <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid_l,metric = "ROC")
 
 summary (glmnet_tuned_l)
+plot(glmnet_tuned_l)
 
 # Make predictions
 predictions <- predict(glmnet_tuned_l, newdata = X_validation)
@@ -202,10 +205,12 @@ confusion_matrix <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics Elastic net:")
 print(confusion_matrix)
 
+plot(glmnet_tuned_e)
+
 # K-NN
 
 # KNN-specific cross-validation
-trainControl <- trainControl(method = "repeatedcv",number = 10,repeats = 3,classProbs = TRUE,summaryFunction = twoClassSummary)
+trainControlknn <- trainControl(method = "repeatedcv",number = 10,repeats = 3,classProbs = TRUE,summaryFunction = twoClassSummary)
 
 # KNN
 knn_model <- train(  Class ~ .,data = X_train,method = "knn",trControl = trainControl,metric = "ROC")
@@ -223,24 +228,24 @@ print(confusion_matrix)
 
 # K-NN tuned
 
-# KNN-specific cross-validation
-trainControl <- trainControl(method = "repeatedcv",number = 10,repeats = 3,classProbs = TRUE,summaryFunction = twoClassSummary)
 
 # Create tuning grid for KNN
-tuneGrid <- expand.grid(k = seq(1, 30, by = 2))
+tuneGrid_knn <- expand.grid(k = seq(11, 17, by = 2))
 
-knn_model <- train(Class ~ .,data = X_train,method = "knn",trControl = trainControl,tuneGrid = expand.grid(k = seq(1, 30, by = 2)),metric = "ROC")
+knn_model_t <- train(Class ~ .,data = X_train,method = "knn",trControl = trainControlknn,tuneGrid = tuneGrid_knn,metric = "ROC") # was worse with PCA
 
-summary (knn_model) # try pca
+summary (knn_model_t) 
+plot(knn_model_t)
 
 # Make predictions
-predictions <- predict(knn_model, newdata = X_validation)
-prob_predictions <- predict(knn_model, newdata = X_validation, type = "prob")
+predictions <- predict(knn_model_t, newdata = X_validation)
+prob_predictions <- predict(knn_model_t, newdata = X_validation, type = "prob")
 
 # Create confusion matrix
 confusion_matrix <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics K-NN tuned:")
 print(confusion_matrix)
+
 
 # SVM
 
