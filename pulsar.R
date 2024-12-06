@@ -1,4 +1,5 @@
 library(caret)
+library(e1071)
 library(tidyr)
 library(ggplot2)
 library(ggthemes)
@@ -259,34 +260,26 @@ print(confusion_matrix)
 
 
 
-# SVM with radial kernel (default)
-set.seed(123)  # for reproducibility
-svm_model <- train(Class ~ .,data = X_train,method = "svmRadial",trControl = trainControl,metric = "ROC")
+# SVM radial Tuned
+tuneGrid_svm <- expand.grid(sigma = seq(0.1, 1, length = 5), C = seq(0.1, 2, length = 5))
 
-# Print model details
-print(svm_model) # change to plot
+# Set seed for reproducibility
+set.seed(123)
+
+# Use the tune function for hyperparameter tuning
+tuned_svm <- tune(svm,Class ~ .,data = X_train,kernel = "radial",ranges = tuneGrid_svm)
+
+# Print the best parameters
+plot(tuned_svm)
 summary(svm_model)
 
-# Make predictions
-predictions <- predict(svm_model, newdata = X_validation)
-prob_predictions <- predict(svm_model, newdata = X_validation, type = "prob")
+# Train the final model with the best parameters
+final_model <- tuned_svm$best.model
 
-# Create confusion matrix
-confusion_matrix <- confusionMatrix(predictions, y_validation)
-print("Confusion Matrix and Statistics SVM:")
-print(confusion_matrix)
+# Make predictions with the final model on the validation set
+predictions_tuned <- predict(final_model, newdata = X_validation)
 
-# SVM radial Tuned
-tuneGrid_svm <- expand.grid(sigma = seq(0.1, 1, length = 10),C = seq(0.1, 2, length = 10))
-
-set.seed(123)  # for reproducibility
-svm_tuned <- train(Class ~ .,data = X_train,method = "svmRadial",trControl = trainControl,tuneGrid = tuneGrid_svm,metric = "ROC")
-
-# Plot tuning results
-plot(svm_tuned)
-
-# Make predictions with tuned model
-predictions_tuned <- predict(svm_tuned, newdata = X_validation)
+# Create confusion matrix for the final model
 confusion_matrix_tuned <- confusionMatrix(predictions_tuned, y_validation)
 print("Confusion Matrix and Statistics SVM Tuned:")
 print(confusion_matrix_tuned)
