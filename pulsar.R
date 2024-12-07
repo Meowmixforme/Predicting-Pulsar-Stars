@@ -261,26 +261,50 @@ print(confusion_matrix)
 
 
 # SVM radial Tuned
-tuneGrid_svm <- expand.grid(sigma = seq(0.1, 1, length = 5), C = seq(0.1, 2, length = 5))
+tuneGrid_svm_r <- expand.grid(sigma = seq(0.01, 2, length = 10), C = seq(0.01, 5, length = 10))
 
 # Set seed for reproducibility
 set.seed(123)
 
 # Use the tune function for hyperparameter tuning
-tuned_svm <- tune(svm,Class ~ .,data = X_train,kernel = "radial",ranges = tuneGrid_svm)
+tuned_svm_r <- tune(svm, Class ~ ., data = X_train, kernel = "radial", ranges = tuneGrid_svm_r, tunecontrol = tune.control(cross = 10))
 
 # Print the best parameters
-plot(tuned_svm)
-summary(svm_model)
+plot(tuned_svm_r)
+summary(tuned_svm_r)
 
 # Train the final model with the best parameters
-final_model <- tuned_svm$best.model
+final_model_r <- tuned_svm_r$best.model
 
 # Make predictions with the final model on the validation set
-predictions_tuned <- predict(final_model, newdata = X_validation)
+predictions_tuned <- predict(final_model_r, newdata = X_validation)
 
 # Create confusion matrix for the final model
 confusion_matrix_tuned <- confusionMatrix(predictions_tuned, y_validation)
 print("Confusion Matrix and Statistics SVM Tuned:")
 print(confusion_matrix_tuned)
 
+
+# SVM polynomial Tuned
+tuneGrid_svm_poly <- expand.grid(degree = 2:3, C = seq(0.1, 2, length = 5), scale = seq(0.1, 1, length = 5))
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Use the tune function for hyperparameter tuning with polynomial kernel
+tuned_svm_poly <- tune(svm, Class ~ ., data = X_train, kernel = "polynomial", ranges = tuneGrid_svm_poly, tunecontrol = tune.control(cross = 10))
+
+# Print the best parameters
+plot(tuned_svm_poly)
+summary(tuned_svm_poly)
+
+# Train the final model with the best parameters
+final_model_poly <- tuned_svm_poly$best.model
+
+# Make predictions with the final model on the validation set
+predictions_tuned <- predict(final_model_poly, newdata = X_validation)
+
+# Create confusion matrix for the final model
+confusion_matrix_tuned <- confusionMatrix(predictions_tuned, y_validation)
+print("Confusion Matrix and Statistics SVM Tuned:")
+print(confusion_matrix_tuned)
