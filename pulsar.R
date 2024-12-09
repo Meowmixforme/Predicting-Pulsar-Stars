@@ -308,3 +308,52 @@ predictions_tuned <- predict(final_model_poly, newdata = X_validation)
 confusion_matrix_tuned <- confusionMatrix(predictions_tuned, y_validation)
 print("Confusion Matrix and Statistics SVM Tuned:")
 print(confusion_matrix_tuned)
+
+
+# SVM Linear Tuned
+tuneGrid_svm_linear <- expand.grid(C = seq(0.1, 2, length = 5))
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Use the tune function for hyperparameter tuning with linear kernel (no cross-validation)
+tuned_svm_linear <- tune(svm, Class ~ ., data = X_train, kernel = "linear", ranges = tuneGrid_svm_linear, tunecontrol = tune.control(cross = 10))
+
+# Print the best parameters
+plot(tuned_svm_linear)
+summary(tuned_svm_linear)
+
+# Train the final model with the best parameters
+final_model_linear <- tuned_svm_linear$best.model
+
+# Make predictions with the final model on the validation set
+predictions_tuned <- predict(final_model_linear, newdata = X_validation)
+
+# Create confusion matrix for the final model
+confusion_matrix_tuned <- confusionMatrix(predictions_tuned, y_validation)
+print("Confusion Matrix and Statistics for Linear SVM Tuned:")
+print(confusion_matrix_tuned)
+
+# SVM Sigmoid Tuned
+tuneGrid_svm_sigmoid <- expand.grid(C = seq(0.1, 2, length = 5), alpha = seq(0.1, 1, length = 5))
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Use the tune function for hyperparameter tuning with sigmoid kernel
+tuned_svm_sigmoid <- tune(svm, Class ~ ., data = X_train, kernel = "sigmoid", ranges = tuneGrid_svm_sigmoid, tunecontrol = tune.control(cross = 10))
+
+# Print the best parameters
+plot(tuned_svm_sigmoid)
+summary(tuned_svm_sigmoid)
+
+# Train the final model with the best parameters
+final_model_sigmoid <- tuned_svm_sigmoid$best.model
+
+# Make predictions with the final model on the validation set
+predictions_tuned <- predict(final_model_sigmoid, newdata = X_validation)
+
+# Create confusion matrix for the final model
+confusion_matrix_tuned <- confusionMatrix(predictions_tuned, y_validation)
+print("Confusion Matrix and Statistics SVM Tuned:")
+print(confusion_matrix_tuned)
