@@ -1,6 +1,9 @@
 library(caret)
 library(e1071)
 library(randomForest)
+library(keras)
+library(tensorflow)
+library(reticulate)
 library(tidyr)
 library(ggplot2)
 library(ggthemes)
@@ -406,11 +409,7 @@ tuneGrid_rf <- expand.grid(mtry = seq(1, ncol(X_train) - 1, by = 1))  # Adjust t
 
 # Train the Random Forest model with tuning
 set.seed(123)  # for reproducibility
-rf_model_tuned <- train(Class ~ ., data = X_train, method = "rf", 
-                        trControl = trainControl_rf, 
-                        tuneGrid = tuneGrid_rf, 
-                        metric = "ROC",
-                        ntree = 70)  # Set ntree directly here
+rf_model_tuned <- train(Class ~ ., data = X_train, method = "rf",trControl = trainControl_rf,tuneGrid = tuneGrid_rf,metric = "ROC",ntree = 70)  # Set ntree directly here
 
 # Print the model summary
 print(rf_model_tuned)
@@ -425,3 +424,50 @@ rf_predictions_tuned <- predict(rf_model_tuned, newdata = X_validation)
 rf_confusion_matrix_tuned <- confusionMatrix(rf_predictions_tuned, y_validation)
 print("Confusion Matrix and Statistics for Tuned Random Forest:")
 print(rf_confusion_matrix_tuned)
+
+
+# Keras 
+
+# Convert class labels to categorical
+y_train_categorical <- to_categorical(as.numeric(y_train) - 1)  # Assuming y_train is a factor
+y_validation_categorical <- to_categorical(as.numeric(y_validation) - 1)
+
+# Define the CNN model
+model <- keras_model_sequential() %>%
+  layer_conv_2d(filters = 32, kernel_size = c(3, 3), activation = 'relu', input_shape = c(28, 28, 1)) %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  layer_conv_2d(filters = 64, kernel_size = c(3, 3), activation = 'relu') %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  layer_flatten() %>%
+  layer_dense(units = 128, activation = 'relu') %>%
+  layer_dropout(rate = 0.5) %>%
+  layer_dense(units = 2, activation = 'softmax')  # Adjust units for the number of classes
+
+# Compile the model
+model %>% compile(
+  loss = 'categorical_crossentropy',
+  optimizer = optimizer_adam(),
+  metrics = c('accuracy')
+)
+
+# Train the model
+history <- model %>% fit(
+  X_train, y_train_categorical,
+  epochs = 30,  # Adjust the number of epochs as needed
+  batch_size = 32,  # Adjust batch size as needed
+  validation_data = list(X_validation, y_validation_categorical)
+)
+
+# Evaluate the model on the validation set
+score <- model %>% evaluate(X_validation, y_validation_categorical)
+cat("Validation loss:", score$loss, "\n")
+cat("Validation accuracy:", score$accuracy, "\n")
+
+# Make predictions on the validation set
+predictions <- model %>% predict_classes(X_validation)
+
+# Create confusion matrix for the CNN model
+library(caret)
+confusion_matrix_cnn <- confusionMatrix(as.factor(predictions), as.factor(y_validation))
+print("Confusion Matrix and Statistics for CNN:")
+print(confusion_matrix_cnn)
