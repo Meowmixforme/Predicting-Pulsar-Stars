@@ -7,6 +7,7 @@ library(reticulate)
 library(tidyr)
 library(ggplot2)
 library(ggthemes)
+library(corrplot)
 
 
 # Set script current directory as working directory
@@ -24,11 +25,65 @@ class(pulsar)
 print("Overall class distribution:")
 table(pulsar$X0)
 prop.table(table(pulsar$X0)) * 100 
+# Dimensions of dataset
+
+dim(pulsar)
+
+# list types for each attribute
+
+sapply(pulsar, class)
+
+# Take a peek at the first 20 rows of the dataset
+
+head(pulsar, n=20)
+
+# summarize attribute distributions
+
+summary(pulsar)
 
 
 # Number of missing values
 
 colSums(is.na(pulsar))
+
+# Unimodal data visualizations
+
+# histograms each attribute
+
+par(mfrow = c(2,7))
+
+for (i in 1:13) {
+  hist(pulsar[, i], main = names(pulsar)[i])
+  
+}
+
+
+# density plot for each attribute
+
+par(mfrow = c(2,7))
+for (i in 1:9) {
+  plot(density(pulsar[,i]), main = names(pulsar)[i])
+  
+}
+
+# Boxplots for each attribute
+
+par(mfrow = c(2,7))
+for (i in 1:9) {
+  boxplot(pulsar[,i], main = names(pulsar)[i])
+  
+}
+
+# scatterplot matrix
+
+pairs(pulsar[,1:9])
+
+# correlation plot
+
+correlations <- cor(pulsar[,1:8])
+
+corrplot(correlations, method = "circle")
+
 
 # Create a long version of the dataset
 pulsar2 <- gather(pulsar, "feature", "value", -X0)  # Exclude the target variable X0
