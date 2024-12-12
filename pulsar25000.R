@@ -50,9 +50,9 @@ colSums(is.na(pulsar))
 
 # histograms each attribute
 
-par(mfrow = c(2,7))
+par(mfrow = c(3,3))
 
-for (i in 1:13) {
+for (i in 1:9) {
   hist(pulsar[, i], main = names(pulsar)[i])
   
 }
@@ -60,7 +60,7 @@ for (i in 1:13) {
 
 # density plot for each attribute
 
-par(mfrow = c(2,7))
+par(mfrow = c(3,3))
 for (i in 1:9) {
   plot(density(pulsar[,i]), main = names(pulsar)[i])
   
@@ -68,7 +68,7 @@ for (i in 1:9) {
 
 # Boxplots for each attribute
 
-par(mfrow = c(2,7))
+par(mfrow = c(3,3))
 for (i in 1:9) {
   boxplot(pulsar[,i], main = names(pulsar)[i])
   
@@ -187,18 +187,26 @@ y_validation <- factor(y_validation, levels = c(0, 1), labels = c("Class0", "Cla
 X_validation <- as.data.frame(X_validation)
 
 
-# feature selection made no difference to scores
+# feature selection
+
+# Stepwise regression for feature selection
+# Full model with Class included
+full_model <- glm(Class ~ ., data = X_train, family = "binomial")  # Use Class as the response variable
+stepwise_model <- step(full_model, direction = "both")  # Stepwise selection
+
+# Print the summary of the selected model
+summary(stepwise_model)
 
 
-
-# Training
+# Create a new data frame with only the selected features, minus "X55.68378214"
+X_train <- X_train[, -2] 
 
 # Set up cross-validation parameters
 trainControl <- trainControl(method = "repeatedcv",number = 10,repeats = 3,classProbs = TRUE,summaryFunction = twoClassSummary,savePredictions = TRUE)
 
 
 # Train model with cross-validation
-glm_model <- train( Class ~ .,data = X_train,method = "glm",family = "binomial",trControl = trainControl,metric = "Accuracy")
+glm_model <-  caret::train(Class ~ ., data = X_train, method = "glm",family = "binomial", trControl = trainControl,metric = "ROC")
 
 summary (glm_model)
 
@@ -320,7 +328,7 @@ print(confusion_matrix)
 tuneGrid_knn <- expand.grid(k = seq(7, 9, by = 1))
 
 set.seed(123)  # for reproducibility
-knn_model_t <- train(Class ~ .,data = X_train,method = "knn",trControl = trainControlknn,tuneGrid = tuneGrid_knn,metric = "ROC") # was worse with PCA
+knn_model_t <- caret::train(Class ~ .,data = X_train,method = "knn",trControl = trainControlknn,tuneGrid = tuneGrid_knn,metric = "ROC") # was worse with PCA
 
 summary (knn_model_t) 
 plot(knn_model_t)
@@ -460,11 +468,11 @@ print(rf_confusion_matrix)
 trainControl_rf <- trainControl(method = "cv", number = 10, classProbs = TRUE, summaryFunction = twoClassSummary)
 
 # Create a tuning grid for mtry
-tuneGrid_rf <- expand.grid(mtry = seq(1, ncol(X_train) - 1, by = 1))  # Adjust the range as needed
+tuneGrid_rf <- expand.grid(mtry = seq(1, ncol(X_train) - 1, by = 1)) # Adjust the range as needed
 
 # Train the Random Forest model with tuning
 set.seed(123)  # for reproducibility
-rf_model_tuned <- train(Class ~ ., data = X_train, method = "rf",trControl = trainControl_rf,tuneGrid = tuneGrid_rf,metric = "ROC",ntree = 70)  # Set ntree directly here
+rf_model_tuned <- caret::train(Class ~ ., data = X_train, method = "rf",trControl = trainControl_rf,tuneGrid = tuneGrid_rf,metric = "ROC",ntree = 70)  # Set ntree directly here
 
 # Print the model summary
 print(rf_model_tuned)
