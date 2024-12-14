@@ -53,8 +53,11 @@ colSums(is.na(pulsar))
 par(mfrow = c(3,3))
 
 for (i in 1:9) {
-  hist(pulsar[, i], main = names(pulsar)[i])
-  
+  hist(pulsar[, i], main = names(pulsar)[i],
+       xlab = names(pulsar)[i], 
+       col = ifelse(pulsar$X0 == 0, "lightblue", "lightcoral"),
+       border = "black",
+       breaks = 30) 
 }
 
 
@@ -68,36 +71,32 @@ for (i in 1:9) {
 
 # Boxplots for each attribute
 
-par(mfrow = c(3,3))
-for (i in 1:9) {
-  boxplot(pulsar[,i], main = names(pulsar)[i])
-  
+par(mfrow = c(3, 3))
+
+# Loop through the first 8 predictors (since X0 is the 9th column)
+for (i in 1:8) {
+  # Create boxplot for each predictor, grouped by class
+  boxplot(pulsar[, i] ~ pulsar$X0, 
+          main = names(pulsar)[i], 
+          xlab = "Pulsar Type", 
+          ylab = names(pulsar)[i],
+          names = c("Non-Pulsar (0)", "Pulsar (1)"))
 }
 
 # scatterplot matrix
 
-pairs(pulsar[,1:9])
+colors <- ifelse(pulsar$X0 == 0, "blue", "red") 
+pairs(pulsar[,1:9],
+      col = colors, 
+      pch = 19,  # Use filled circles
+      main = "Scatter Plot Matrix of Pulsar Predictors",
+      upper.panel = NULL) 
 
 # correlation plot
 
 correlations <- cor(pulsar[,1:8])
 
 corrplot(correlations, method = "circle")
-
-
-# Create a long version of the dataset
-pulsar2 <- gather(pulsar, "feature", "value", -X0)  # Exclude the target variable X0
-
-# Create the boxplot
-ggplot(pulsar2) +
-  geom_boxplot(aes(factor(X0), log(value))) +
-  facet_wrap(~feature, scales = "free") +
-  labs(title = "Box-plot of all predictors(log scaled) per pulsar type",
-       subtitle = "Pulsar can be either non-pulsar (0) or pulsar (1)") +
-  theme_fivethirtyeight() +
-  theme(axis.title = element_text()) +
-  ylab("Predictor's log value") +
-  xlab('')
 
 
 # Preprocessing
