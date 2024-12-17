@@ -7,6 +7,7 @@ library(dplyr)
 library(ggplot2)
 library(ggthemes)
 library(corrplot)
+library(smotefamily)
 
 
 # Set script current directory as working directory
@@ -137,40 +138,61 @@ X_validation <- scale(X_validation, center = attr(X_train, "scaled:center"),
 X_train <- data.frame(X_train)
 X_train$Class <- factor(y_train, levels = c(0, 1), labels = c("Class0", "Class1"))
 
-# Separate majority and minority classes
-majority_class <- X_train[X_train$Class == "Class0", ]
-minority_class <- X_train[X_train$Class == "Class1", ]
+# Apply BLSMOTE on training data
+X_train_features <- X_train[, !names(X_train) %in% c("Class")]
 
-# Set target number of samples for each class
-target_samples <- 5000  # 2500 for each class
+# Convert Class labels to numeric (0,1) properly
+y_train_blsmote <- ifelse(X_train$Class == "Class0", 0, 1)
 
-# Random downsampling of majority class to reach the target number
+# Verify no NAs in the data
+print("Checking for NAs in features:")
+print(colSums(is.na(X_train_features)))
+print("\nChecking for NAs in target:")
+print(sum(is.na(y_train_blsmote)))
+
+# Apply BLSMOTE
+genData_BLSMOTE <- BLSMOTE(X_train_features, 
+                           y_train_blsmote, 
+                           K = 5,  
+                           C = 5)
+
+# Combine original and synthetic data
+combined_data <- rbind(genData_BLSMOTE$data, genData_BLSMOTE$syn_data)
+
+# Convert class to factor with proper labels
+combined_data$class <- factor(combined_data$class, 
+                              levels = c(0, 1), 
+                              labels = c("Class0", "Class1"))
+
+# Now perform downsampling on the combined data
+majority_class <- combined_data[combined_data$class == "Class0", ]
+minority_class <- combined_data[combined_data$class == "Class1", ]
+
+# Set target number for downsampling (using your target of 2500)
+target_samples <- 2500
+
+# Downsample majority class
 set.seed(123)
-if (nrow(majority_class) > target_samples) {
-  majority_downsampled <- majority_class[sample(nrow(majority_class), 
-                                                size = target_samples, 
-                                                replace = FALSE), ]
-} else {
-  majority_downsampled <- majority_class  # No downsampling needed if already sufficient
-}
-
-# Random upsampling of minority class to reach the target number
-if (nrow(minority_class) < target_samples) {
-  minority_upsampled <- minority_class[sample(nrow(minority_class), 
+majority_downsampled <- majority_class[sample(nrow(majority_class), 
                                               size = target_samples, 
-                                              replace = TRUE), ]
-} else {
-  minority_upsampled <- minority_class  # No upsampling needed if already sufficient
-}
+                                              replace = FALSE), ]
 
-# Combine downsampled majority class with upsampled minority class
-X_train <- rbind(majority_downsampled, minority_upsampled)
+# Take samples from minority class
+minority_samples <- minority_class[sample(nrow(minority_class), 
+                                          size = target_samples, 
+                                          replace = FALSE), ]
 
-# Shuffle the balanced dataset
+# Combine datasets
+X_train <- rbind(majority_downsampled, minority_samples)
+
+# Shuffle the final dataset
 X_train <- X_train[sample(nrow(X_train)), ]
 
+# Rename the class column to match your original code
+names(X_train)[names(X_train) == "class"] <- "Class"
+
 # Verify the class distribution after balancing
-print("New class distribution after balancing:")
+print("New class distribution after BLSMOTE and downsampling:")
 print(prop.table(table(X_train$Class)) * 100)
 
 # Check the number of samples in each class
@@ -276,7 +298,7 @@ print(confusion_matrix)
 
 # glmnet elastic net tuned
 # Set up tuning grid for glmnet elastic
-tuneGrid_e <- expand.grid(alpha = seq(0.5, 1, by = 0.3),lambda = seq(0.02, 0.001, length = 10)) # Best settings
+tuneGrid_e <- expand.grid(alpha = seq(0.5, 1, by = 0.1),lambda = seq(0.1, 0.001, length = 10)) # Best settings
 
 # Train the tuned glmnet model elastic net
 set.seed(123)  # for reproducibility
@@ -462,7 +484,7 @@ print(rf_confusion_matrix)
 trainControl_rf <- trainControl(method = "cv", number = 10, classProbs = TRUE, summaryFunction = twoClassSummary)
 
 # Create a tuning grid for mtry
-tuneGrid_rf <- expand.grid(mtry = seq(1, ncol(X_train) - 1, by = 1)) # Adjust the range as needed
+tuneGrid_rf <- expand.grid(mtry = seq(2, ncol(X_train) - 1, by = 1)) # Adjust the range as needed
 
 # Train the Random Forest model with tuning
 set.seed(123)  # for reproducibility
