@@ -1,7 +1,8 @@
 library(caret)
 library(e1071)
+library(rpart)
 library(randomForest)
-library(reticulate)
+library(nnet)
 library(tidyr)
 library(dplyr)
 library(ggplot2)
@@ -142,7 +143,7 @@ majority_class <- X_train[X_train$Class == "Class0", ]
 minority_class <- X_train[X_train$Class == "Class1", ]
 
 # Set target number of samples for each class
-target_samples <- 5000  # 2500 for each class
+target_samples <- 15000  # 2500 for each class
 
 # Random downsampling of majority class to reach the target number
 set.seed(123)
@@ -283,6 +284,7 @@ set.seed(123)  # for reproducibility
 glmnet_tuned_e <- caret::train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid_e,metric = "ROC")
 
 summary (glmnet_tuned_e)
+plot(glmnet_tuned_e)
 
 # Make predictions
 predictions <- predict(glmnet_tuned_e, newdata = X_validation)
@@ -293,7 +295,6 @@ confusion_matrix <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics Elastic net:")
 print(confusion_matrix)
 
-plot(glmnet_tuned_e)
 
 # K-NN
 
@@ -336,6 +337,26 @@ confusion_matrix <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics K-NN tuned:")
 print(confusion_matrix)
 
+# K-NN best tuned
+
+
+# Create tuning grid for KNN
+tuneGrid_knn <- expand.grid(k = seq(9)) # 8 is peak
+
+set.seed(123)  # for reproducibility
+knn_model_t <- caret::train(Class ~ .,data = X_train,method = "knn",trControl = trainControlknn,tuneGrid = tuneGrid_knn,metric = "ROC") # was worse with PCA
+
+summary (knn_model_t) 
+#plot(knn_model_t)
+
+# Make predictions
+predictions <- predict(knn_model_t, newdata = X_validation)
+prob_predictions <- predict(knn_model_t, newdata = X_validation, type = "prob")
+
+# Create confusion matrix
+confusion_matrix <- confusionMatrix(predictions, y_validation)
+print("Confusion Matrix and Statistics K-NN tuned:")
+print(confusion_matrix)
 
 
 # SVM radial Tuned
@@ -456,7 +477,7 @@ rf_confusion_matrix <- confusionMatrix(rf_predictions, y_validation)
 print("Confusion Matrix and Statistics for Random Forest:")
 print(rf_confusion_matrix)
 
-# Random Forest Tuned
+## Random Forest Tuned
 
 # Set up cross-validation parameters
 trainControl_rf <- trainControl(method = "cv", number = 10, classProbs = TRUE, summaryFunction = twoClassSummary)
@@ -481,5 +502,143 @@ rf_predictions_tuned <- predict(rf_model_tuned, newdata = X_validation)
 rf_confusion_matrix_tuned <- confusionMatrix(rf_predictions_tuned, y_validation)
 print("Confusion Matrix and Statistics for Tuned Random Forest:")
 print(rf_confusion_matrix_tuned)
+
+best_mtry <- rf_model_tuned$bestTune$mtry 
+print(paste("Best mtry value:", best_mtry))
+
+### Random forest best tuned
+
+# Train Control
+trainControl_rf <- trainControl(method = "cv", number = 10, classProbs = TRUE, summaryFunction = twoClassSummary)
+
+tuneGrid_rf <- expand.grid(mtry = 1)
+
+
+# Train the Random Forest model with the best mtry value
+set.seed(123)  # for reproducibility
+rf_model_optimized <- caret::train(Class ~ ., data = X_train, method = "rf",
+                                   trControl = trainControl_rf, 
+                                   tuneGrid = tuneGrid_rf, 
+                                   metric = "ROC", 
+                                   ntree = 78, # Adjust the number of trees if needed
+                                   nodesize = 1, # Adjust if necessary
+                                   maxnodes = 1000) # Adjust if necessary
+
+# Print the model summary
+print(rf_model_optimized)
+#plot(rf_model_tuned)
+
+# Make predictions on the validation set
+rf_predictions_optimized <- predict(rf_model_optimized, newdata = X_validation)
+
+# Create confusion matrix for the optimized Random Forest model
+rf_confusion_matrix_optimized <- confusionMatrix(rf_predictions_optimized, y_validation)
+print("Confusion Matrix and Statistics for Optimized Random Forest:")
+print(rf_confusion_matrix_optimized)
+
+
+
+
+
+## Neuralnet Feed-Forward Neural Network
+
+# Set up cross-validation parameters
+trainControl_nn <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  repeats = 3,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary
+)
+
+# Create tuning grid for neural network
+tuneGrid_nn <- expand.grid(
+  size = c(5, 10, 15),        # number of hidden nodes
+  decay = c(0.001, 0.01, 0.1) # weight decay parameter
+)
+
+# Train neural network model
+set.seed(123)
+nn_model <- train(
+  Class ~ .,
+  data = X_train,
+  method = "nnet",
+  metric = "ROC",
+  trControl = trainControl_nn,
+  tuneGrid = tuneGrid_nn,
+  maxit = 1000,           # maximum iterations
+  trace = FALSE,          # suppress training output
+  linout = FALSE,         # use logistic output layer
+  MaxNWts = 10000        # increase maximum number of weights allowed
+)
+
+# Print results
+print("Best tuning parameters:")
+print(nn_model$bestTune)
+print("\nModel performance:")
+print(nn_model)
+
+# Plot training results
+plot(nn_model, main = "Neural Network Training Results")
+
+# Variable importance
+importance_matrix <- varImp(nn_model)
+plot(importance_matrix, main = "Variable Importance Plot - Neural Network")
+
+# Make predictions
+predictions_nn <- predict(nn_model, newdata = X_validation)
+prob_predictions_nn <- predict(nn_model, newdata = X_validation, type = "prob")
+
+# Create confusion matrix
+confusion_matrix_nn <- confusionMatrix(predictions_nn, y_validation)
+print("Confusion Matrix and Statistics for Neural Network:")
+print(confusion_matrix_nn)
+
+
+## Neuralnet Tuned
+
+# Set up cross-validation parameters
+trainControl_nn <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  repeats = 3,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary
+)
+
+# Create tuning grid for neural network
+tuneGrid_nn <- expand.grid(
+  size = c(50, 60, 70),    # Focused around successful sizes
+  decay = c(0.0005, 0.05, 0.5)    # Fine-tuning around successful decay
+)
+
+
+# Train neural network model
+set.seed(123)
+nn_model <- train(Class ~ .,data = X_train,method = "nnet",metric = "ROC",trControl = trainControl_nn,
+                  tuneGrid = tuneGrid_nn,maxit = 1500,trace = FALSE,MaxNWts = 25000)
+
+# Print results
+print("Best tuning parameters:")
+print(nn_model$bestTune)
+print("\nModel performance:")
+print(nn_model)
+
+# Plot training results
+plot(nn_model, main = "Neural Network Training Results")
+
+# Variable importance
+importance_matrix <- varImp(nn_model)
+plot(importance_matrix, main = "Variable Importance Plot - Neural Network")
+
+# Make predictions
+predictions_nn <- predict(nn_model, newdata = X_validation)
+prob_predictions_nn <- predict(nn_model, newdata = X_validation, type = "prob")
+
+# Create confusion matrix
+confusion_matrix_nn <- confusionMatrix(predictions_nn, y_validation)
+print("Confusion Matrix and Statistics for Neural Network:")
+print(confusion_matrix_nn)
+
 
 
