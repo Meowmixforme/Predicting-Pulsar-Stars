@@ -421,6 +421,8 @@ confusion_matrix <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics K-NN tuned 2:")
 print(confusion_matrix)
 
+
+
 # K-NN best tuned = 8
 
 
@@ -440,6 +442,8 @@ predictions <- predict(knn_model_t, newdata = X_validation)
 confusion_matrix <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics K-NN tuned 8:")
 print(confusion_matrix)
+
+
 
 
 ## SVM radial Tuned
@@ -472,16 +476,15 @@ print("Confusion Matrix and Statistics SVM radial Tuned:")
 print(confusion_matrix_tuned)
 
 
+
+
 ## SVM polynomial Tuned
 
-tuneGrid_svm_poly <- expand.grid(sigma = seq(0.01, 2, length = 5), C = seq(0.01, 5, length = 5))
+tuneGrid_svm_poly <- expand.grid(   degree = 2:4, C = seq(0.01, 5, length = 5), scale = seq(0.1, 1, length = 5))
 
-# Set seed for reproducibility
+# tune the model
 
-set.seed(123)
-
-# Use the tune function for hyperparameter tuning with polynomial kernel
-
+set.seed(123) # for reproducibility
 tuned_svm_poly <- tune(svm, Class ~ ., data = X_train, kernel = "polynomial", ranges = tuneGrid_svm_poly, tunecontrol = tune.control(cross = 10))
 
 # Print the best parameters
@@ -502,6 +505,8 @@ predictions_tuned <- predict(final_model_poly, newdata = X_validation)
 confusion_matrix_tuned <- confusionMatrix(predictions_tuned, y_validation)
 print("Confusion Matrix and Statistics SVM poly Tuned:")
 print(confusion_matrix_tuned)
+
+
 
 
 ## SVM Linear Tuned
@@ -534,7 +539,7 @@ print(confusion_matrix_tuned)
 
 # SVM Sigmoid Tuned
 
-tuneGrid_svm_sigmoid <- expand.grid(C = seq(0.1, 2, length = 5), alpha = seq(0.1, 1, length = 5))
+tuneGrid_svm_sigmoid <- expand.grid(gamma = seq(0.001, 1, length = 5),coef0 = seq(0, 2, length = 5),C = seq(0.1, 5, length = 5))
 
 
 # Use the tune function for hyperparameter tuning with sigmoid kernel
