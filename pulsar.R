@@ -480,7 +480,7 @@ print(confusion_matrix_tuned)
 
 ## SVM polynomial Tuned
 
-tuneGrid_svm_poly <- expand.grid(   degree = 2:4, C = seq(0.01, 5, length = 5), scale = seq(0.1, 1, length = 5))
+tuneGrid_svm_poly <- expand.grid(degree = 2:4,coef0 = seq(0.1, 1, length = 5), C = seq(0.01, 5, length = 5))
 
 # tune the model
 
@@ -537,12 +537,15 @@ confusion_matrix_tuned <- confusionMatrix(predictions_tuned, y_validation)
 print("Confusion Matrix and Statistics for Linear SVM linear Tuned:")
 print(confusion_matrix_tuned)
 
+
+
+
 # SVM Sigmoid Tuned
 
 tuneGrid_svm_sigmoid <- expand.grid(gamma = seq(0.001, 1, length = 5),coef0 = seq(0, 2, length = 5),C = seq(0.1, 5, length = 5))
 
 
-# Use the tune function for hyperparameter tuning with sigmoid kernel
+# tune model
 
 set.seed(123) # for reproducibility
 tuned_svm_sigmoid <- tune(svm, Class ~ ., data = X_train, kernel = "sigmoid", ranges = tuneGrid_svm_sigmoid, tunecontrol = tune.control(cross = 10))
@@ -570,7 +573,7 @@ print(confusion_matrix_tuned)
 ## RANDOM FOREST
 
 
-# Train the Random Forest model with default parameters
+# Train Random Forest with default parameters
 
 set.seed(123)  # for reproducibility
 rf_model <- randomForest(Class ~ ., data = X_train)
