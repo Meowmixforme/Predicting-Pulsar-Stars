@@ -8,6 +8,7 @@ library(randomForest)
 library(nnet)
 library(tidyr)
 library(dplyr)
+library(pROC)
 library(ggplot2)
 library(ggthemes)
 library(corrplot)
@@ -465,45 +466,14 @@ print(tuned_svm_r$bestTune)
 
 final_model_r <- tuned_svm_r$best.model
 
-# Make predictions with the final model on the validation set
+# Make predictions 
 
 predictions_tuned <- predict(final_model_r, newdata = X_validation)
 
-# Create confusion matrix for the final model
+# Create confusion matrix and print results
 
 confusion_matrix_tuned <- confusionMatrix(predictions_tuned, y_validation)
 print("Confusion Matrix and Statistics SVM radial Tuned:")
-print(confusion_matrix_tuned)
-
-
-
-
-## SVM polynomial Tuned
-
-tuneGrid_svm_poly <- expand.grid(degree = 2:4,coef0 = seq(0.1, 1, length = 5), C = seq(0.01, 5, length = 5))
-
-# tune the model
-
-set.seed(123) # for reproducibility
-tuned_svm_poly <- tune(svm, Class ~ ., data = X_train, kernel = "polynomial", ranges = tuneGrid_svm_poly, tunecontrol = tune.control(cross = 10))
-
-# Print the best parameters
-
-plot(tuned_svm_poly)
-summary(tuned_svm_poly)
-
-# Train the final model with the best parameters
-
-final_model_poly <- tuned_svm_poly$best.model
-
-# Make predictions with the final model on the validation set
-
-predictions_tuned <- predict(final_model_poly, newdata = X_validation)
-
-# Create confusion matrix for the final model
-
-confusion_matrix_tuned <- confusionMatrix(predictions_tuned, y_validation)
-print("Confusion Matrix and Statistics SVM poly Tuned:")
 print(confusion_matrix_tuned)
 
 
@@ -527,46 +497,17 @@ summary(tuned_svm_linear)
 
 final_model_linear <- tuned_svm_linear$best.model
 
-# Make predictions with the final model on the validation set
+# Make predictions
 
 predictions_tuned <- predict(final_model_linear, newdata = X_validation)
 
-# Create confusion matrix for the final model
+# Create confusion matrix and print results
 
 confusion_matrix_tuned <- confusionMatrix(predictions_tuned, y_validation)
 print("Confusion Matrix and Statistics for Linear SVM linear Tuned:")
 print(confusion_matrix_tuned)
 
 
-
-
-# SVM Sigmoid Tuned
-
-tuneGrid_svm_sigmoid <- expand.grid(gamma = seq(0.001, 1, length = 5),coef0 = seq(0, 2, length = 5),C = seq(0.1, 5, length = 5))
-
-
-# tune model
-
-set.seed(123) # for reproducibility
-tuned_svm_sigmoid <- tune(svm, Class ~ ., data = X_train, kernel = "sigmoid", ranges = tuneGrid_svm_sigmoid, tunecontrol = tune.control(cross = 10))
-
-# Print the best parameters
-plot(tuned_svm_sigmoid)
-summary(tuned_svm_sigmoid)
-
-# Train the final model with the best parameters
-
-final_model_sigmoid <- tuned_svm_sigmoid$best.model
-
-# Make predictions with the final model on the validation set
-
-predictions_tuned <- predict(final_model_sigmoid, newdata = X_validation)
-
-# Create confusion matrix for the final model
-
-confusion_matrix_tuned <- confusionMatrix(predictions_tuned, y_validation)
-print("Confusion Matrix and Statistics SVM sigmoid Tuned:")
-print(confusion_matrix_tuned)
 
 
 
@@ -593,27 +534,29 @@ rf_confusion_matrix <- confusionMatrix(rf_predictions, y_validation)
 print("Confusion Matrix and Statistics for Random Forest:")
 print(rf_confusion_matrix)
 
-## Random Forest Tuned
+
+
+
+## Final software model Random Forest Tuning grid
 
 # Set up cross-validation parameters
 
 trainControl_rf <- trainControl(method = "cv", number = 10, classProbs = TRUE, summaryFunction = twoClassSummary)
 
-# Create a tuning grid for mtry
+# tuning grid for mtry
 
-tuneGrid_rf <- expand.grid(mtry = seq(1, ncol(X_train) - 1, by = 1))
+tuneGrid_rf <- expand.grid(mtry = seq(1, 8, by = 1))
 
 # Train the Random Forest model with tuning
 
 set.seed(123)  # for reproducibility
-rf_model_tuned <- caret::train(Class ~ ., data = X_train, method = "rf",trControl = trainControl_rf,tuneGrid = tuneGrid_rf,metric = "ROC",ntree = 80,nodesize = 2,maxnodes = 1000)  # Set ntree directly here
+rf_model_tuned <- caret::train(Class ~ ., data = X_train, method = "rf",trControl = trainControl_rf,tuneGrid = tuneGrid_rf,metric = "ROC",ntree = 80,nodesize = 2,maxnodes = 1000)
 
-# Print the model summary
+# model summary and tuning results
 
 print(rf_model_tuned)
-
-# Plot the tuning results
-
+best_mtry <- rf_model_tuned$bestTune$mtry 
+print(paste("Best mtry value:", best_mtry))
 plot(rf_model_tuned)
 
 # Make predictions on the validation set
@@ -626,35 +569,41 @@ rf_confusion_matrix_tuned <- confusionMatrix(rf_predictions_tuned, y_validation)
 print("Confusion Matrix and Statistics for Tuned Random Forest tuned:")
 print(rf_confusion_matrix_tuned)
 
-best_mtry <- rf_model_tuned$bestTune$mtry 
-print(paste("Best mtry value:", best_mtry))
-
-### Random forest best tuned
-
-# Train Control
-
-trainControl_rf <- trainControl(method = "cv", number = 10, classProbs = TRUE, summaryFunction = twoClassSummary)
-
-tuneGrid_rf <- expand.grid(mtry = 2)
 
 
-# Train the Random Forest model with the best mtry value
 
-set.seed(123)  # for reproducibility
-rf_model_optimized <- caret::train(Class ~ ., data = X_train, method = "rf", trControl = trainControl_rf,tuneGrid = tuneGrid_rf,metric = "ROC",ntree = 80,nodesize = 2,maxnodes = 1000) 
 
-# Print the model summary
 
-print(rf_model_optimized)
 
-# Make predictions
 
-rf_predictions_optimized <- predict(rf_model_optimized, newdata = X_validation)
+## ROC curve for final model
 
-# Create confusion matrix optimized Random Forest
 
-rf_confusion_matrix_optimized <- confusionMatrix(rf_predictions_optimized, y_validation)
-print("Confusion Matrix and Statistics for Optimized Random Forest best:")
-print(rf_confusion_matrix_optimized)
+# Get probability predictions
+rf_prob_predictions <- predict(rf_model_tuned, newdata = X_validation, type = "prob")
+
+# Create ROC curve
+
+roc_rf <- roc(y_validation, rf_prob_predictions[,"Class1"])
+
+# Plot ROC curve
+
+plot(roc_rf, 
+     main = "ROC Curve for Random Forest Tuned Model",
+     col = "blue",
+     lwd = 2)
+
+# Add diagonal reference line
+abline(a = 0, b = 1, lty = 2, col = "gray")
+
+# Add AUC to plot
+auc_value <- auc(roc_rf)
+legend("bottomright", 
+       legend = paste("AUC =", round(auc_value, 4)),
+       col = "blue",
+       lwd = 2)
+
+# Print AUC value
+print(paste("AUC:", round(auc_value, 4)))
 
 
