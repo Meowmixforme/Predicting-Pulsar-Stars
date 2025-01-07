@@ -1,5 +1,6 @@
 # v8255920 James Fothergill
-
+# Applied Machine Learning
+# Pulsar Detection
 
 library(caret)
 library(e1071)
@@ -207,15 +208,12 @@ y_validation <- factor(y_validation, levels = c(0, 1), labels = c("Class0", "Cla
 
 # cross-validation parameters
 
-
 trainControl <- trainControl(method = "repeatedcv",number = 10,repeats = 3,classProbs = TRUE,summaryFunction = twoClassSummary,savePredictions = TRUE)
 
 # Train model with cross-validation
 
 set.seed(123)  # for reproducibility
-glm_model <- train( Class ~ .,data = X_train,method = "glm",family = "binomial",trControl = trainControl,metric = "ROC")
-
-
+glm_model <- caret::train( Class ~ .,data = X_train,method = "glm",family = "binomial",trControl = trainControl,metric = "ROC")
 
 # Print results
 
@@ -226,6 +224,9 @@ print(glm_model$results)
 # Make predictions on validation set
 
 predictions <- predict(glm_model, newdata = as.data.frame(X_validation))
+
+# Create confusion matrix
+
 confusion_matrixglm <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics glm: ")
 print(confusion_matrixglm)
@@ -236,7 +237,7 @@ print(confusion_matrixglm)
 # Train model with cross-validation
 
 set.seed(123)  # for reproducibility
-glmnet_model <- train(Class ~ .,data = X_train,method ="glmnet",trControl = trainControl,metric = "ROC")
+glmnet_model <- caret::train(Class ~ .,data = X_train,method ="glmnet",trControl = trainControl,metric = "ROC")
 
 # Print results
 
@@ -251,6 +252,9 @@ print(glmnet_model)
 # Make predictions
 
 predictions <- predict(glmnet_model, newdata = as.data.frame(X_validation))
+
+# Create confusion matrix
+
 confusion_matrixglmn <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics glmnet:")
 print(confusion_matrixglmn)
@@ -267,7 +271,7 @@ tuneGrid_r <- expand.grid(alpha = 0, lambda = seq(0.01, 0.001, length = 10)) # B
 # Train the tuned glmnet model ridge
 
 set.seed(123)  # for reproducibility
-glmnet_tuned_r <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid_r,metric = "ROC")
+glmnet_tuned_r <- caret::train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid_r,metric = "ROC")
 
 # Print results
 
@@ -296,7 +300,9 @@ tuneGrid_l <- expand.grid(alpha = 1 ,lambda = 0.01) # Best settings
 # Train the tuned glmnet model lasso
 
 set.seed(123)  # for reproducibility
-glmnet_tuned_l <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid_l,metric = "ROC")
+glmnet_tuned_l <- caret::train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid_l,metric = "ROC")
+
+# Print results
 
 summary (glmnet_tuned_l)
 
@@ -319,7 +325,9 @@ tuneGrid_e <- expand.grid(alpha = seq(0.5, 0.8, by = 0.3),lambda = seq(0.1, 0.00
 # Train the tuned glmnet model elastic net
 
 set.seed(123)  # for reproducibility
-glmnet_tuned_e <- train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid_e,metric = "ROC")
+glmnet_tuned_e <- caret::train(Class ~ .,data = X_train,method = "glmnet",trControl = trainControl,tuneGrid = tuneGrid_e,metric = "ROC")
+
+# Print results
 
 summary (glmnet_tuned_e)
 plot(glmnet_tuned_e)
@@ -346,7 +354,9 @@ trainControlknn <- trainControl(method = "repeatedcv",number = 10,repeats = 3,cl
 # KNN
 
 set.seed(123)  # for reproducibility
-knn_model <- train(Class ~ .,data = X_train,method = "knn",trControl = trainControl,metric = "ROC")
+knn_model <- caret::train(Class ~ .,data = X_train,method = "knn",trControl = trainControlknn,metric = "ROC")
+
+# Print results
 
 summary (knn_model)
 
@@ -368,7 +378,7 @@ print(confusion_matrixknn)
 tuneGrid_knn <- expand.grid(k = seq(1, 30, by = 1))
 
 set.seed(123)  # for reproducibility
-knn_model_t <- train(Class ~ .,data = X_train,method = "knn",trControl = trainControlknn,tuneGrid = tuneGrid_knn,metric = "ROC") # was worse with PCA
+knn_model_t <- caret::train(Class ~ .,data = X_train,method = "knn",trControl = trainControlknn,tuneGrid = tuneGrid_knn,metric = "ROC") # was worse with PCA
 
 summary (knn_model_t) 
 plot(knn_model_t)
@@ -384,15 +394,15 @@ confusion_matrixknnt <- confusionMatrix(predictions, y_validation)
 print("Confusion Matrix and Statistics K-NN tuned:")
 print(confusion_matrixknnt)
 
-## K-NN best tuned = 13
 
+## K-NN best tuned = 13
 
 # Create tuning grid for KNN
 
 tuneGrid_knn <- expand.grid(k = 13)
 
 set.seed(123)  # for reproducibility
-knn_model_13 <- train(Class ~ .,data = X_train,method = "knn",trControl = trainControlknn, tuneGrid = tuneGrid_knn,metric = "ROC") # was worse with PCA
+knn_model_13 <- caret::train(Class ~ .,data = X_train,method = "knn",trControl = trainControlknn, tuneGrid = tuneGrid_knn,metric = "ROC") # was worse with PCA
 
 summary (knn_model_13) 
 
@@ -417,7 +427,7 @@ tuneGrid_svm_r <- expand.grid(sigma = seq(0.01, 2.5, length = 8), C = seq(0.01, 
 # Tune the model
 
 set.seed(123) # for reproducibility
-svm_radial <- train(Class ~ .,data = X_train,method = "svmRadial",trControl = trainControl(method = "repeatedcv",number = 10,repeats = 3,classProbs = TRUE,summaryFunction = twoClassSummary),
+svm_radial <- caret::train(Class ~ .,data = X_train,method = "svmRadial",trControl = trainControl(method = "repeatedcv",number = 10,repeats = 3,classProbs = TRUE,summaryFunction = twoClassSummary),
                     tuneGrid = tuneGrid_svm_r, metric = "ROC")
 
 # Print results
@@ -427,6 +437,7 @@ plot(svm_radial)
 print(svm_radial$bestTune) 
 
 # Make predictions
+
 predictions <- predict(svm_radial, newdata = X_validation)
 
 # Create confusion matrix
@@ -438,13 +449,14 @@ print(confusion_matrix_svm)
 
 
 
-# Define tuning grid for linear SVM
+## SVM Linear Tuned
+
 tuneGrid_svm_l <- expand.grid(C = seq(0.01, 8, length = 8))
 
 # Tune the model
 
 set.seed(123)
-svm_linear <- train(Class ~ .,data = X_train,method = "svmLinear",trControl = trainControl(method = "repeatedcv",number = 10,repeats = 3,classProbs = TRUE,summaryFunction = twoClassSummary),
+svm_linear <- caret::train(Class ~ .,data = X_train,method = "svmLinear",trControl = trainControl(method = "repeatedcv",number = 10,repeats = 3,classProbs = TRUE,summaryFunction = twoClassSummary),
                     tuneGrid = tuneGrid_svm_l,metric = "ROC")
 
 # Print results
@@ -470,18 +482,23 @@ print(confusion_matrix_svml)
 
 ## RANDOM FOREST
 
+# Set up cross-validation parameters
 
-# Train Random Forest with default parameters
+
+trainControl_rf <- trainControl(method = "repeatedcv", number = 10,repeats = 3, classProbs = TRUE, summaryFunction = twoClassSummary)
+
+
+# Train Random Forest
 
 set.seed(123)  # for reproducibility
-rf_model <- randomForest(Class ~ ., data = X_train)
+rf_model <- caret::train(Class ~ .,data = X_train,method = "rf",trControl = trainControl_rf,metric = "ROC")
 
-# Print the model summary
+# Print results
 
 print(rf_model)
 plot(rf_model)
 
-# Make predictions on the validation set
+# Make predictions
 
 rf_predictions <- predict(rf_model, newdata = X_validation)
 
@@ -494,11 +511,8 @@ print(confusion_matrixrf)
 
 
 
-## Final software model Random Forest Tuning grid
+## Random Forest Tuning grid
 
-# Set up cross-validation parameters
-
-trainControl_rf <- trainControl(method = "repeatedcv", number = 10,repeats = 3, classProbs = TRUE, summaryFunction = twoClassSummary)
 
 # tuning grid for mtry
 
@@ -507,16 +521,17 @@ tuneGrid_rf <- expand.grid(mtry = seq(1, 8, by = 1))
 # Train the Random Forest model with tuning
 
 set.seed(123)  # for reproducibility
-rf_model_tuned <- caret::train(Class ~ ., data = X_train, method = "rf",trControl = trainControl_rf,tuneGrid = tuneGrid_rf,metric = "ROC",ntree = 80,nodesize = 2,maxnodes = 1000)
+rf_model_tuned <- caret::train(Class ~ .,data = X_train,method = "rf",trControl = trainControl_rf,tuneGrid = tuneGrid_rf,
+                               metric = "ROC",ntree = 80,nodesize = 2,maxnodes = 1000)
 
-# model summary and tuning results
+# Print results
 
 print(rf_model_tuned)
 best_mtry <- rf_model_tuned$bestTune$mtry 
 print(paste("Best mtry value:", best_mtry))
 plot(rf_model_tuned)
 
-# Make predictions on the validation set
+# Make predictions
 
 rf_predictions_tuned <- predict(rf_model_tuned, newdata = X_validation)
 
@@ -527,8 +542,31 @@ print("Confusion Matrix and Statistics for Tuned Random Forest tuned:")
 print(confusion_matrix_tunedrf)
 
 
+## Final model Random Forest Tuned
 
 
+tuneGrid_rf <- expand.grid(mtry = 1)
+
+# Train the Random Forest model with tuning
+
+set.seed(123)  # for reproducibility
+rf_model_final <- caret::train(Class ~ .,data = X_train,method = "rf",trControl = trainControl_rf,tuneGrid = tuneGrid_rf,
+                               metric = "ROC",ntree = 80,nodesize = 2,maxnodes = 1000)
+
+
+# Print results
+
+print(rf_model_final)
+
+# Make predictions
+
+rf_predictions_final <- predict(rf_model_final, newdata = X_validation)
+
+# Create confusion matrix for the tuned Random Forest model
+
+confusion_matrix_tunedrffinal <- confusionMatrix(rf_predictions_final, y_validation)
+print("Confusion Matrix and Statistics for Tuned Random Forest final:")
+print(confusion_matrix_tunedrffinal)
 
 
 
@@ -537,32 +575,26 @@ print(confusion_matrix_tunedrf)
 
 # Get probabilities
 
+# GLM probabilities
 glm_pred_prob <- predict(glmnet_tuned_l, newdata = X_validation, type = "prob")[,"Class1"]
 
-# Get SVM probabilities
+# Linear SVM probabilities
+svm_linear_pred_prob <- predict(svm_linear, newdata = X_validation, type = "prob")[,"Class1"]
 
-svm_prob <- predict(final_model_r, newdata = X_validation, probability = TRUE)
-svm_pred_prob <- attr(svm_prob, "probabilities")[,2]
+# RF Final probabilities
+rf_pred_prob <- predict(rf_model_final, newdata = X_validation, type = "prob")[,"Class1"]
 
-# Get RF probabilities
+# KNN  probabilities
+knn_pred_prob <- predict(knn_model, newdata = X_validation, type = "prob")[,"Class1"]
 
-rf_pred_prob <- predict(rf_model_tuned, newdata = X_validation, type = "prob")[,"Class1"]
-
-# Get KNN probabilities
-
-knn_pred_prob <- predict(knn_model_t, newdata = X_validation, type = "prob")[,"Class1"]
-
-# Create all ROC objects
-
+# Create ROC objects
 library(pROC)
 roc_glm <- roc(y_validation, glm_pred_prob)
-roc_svm <- roc(y_validation, svm_pred_prob)
+roc_svm_linear <- roc(y_validation, svm_linear_pred_prob)
 roc_rf <- roc(y_validation, rf_pred_prob)
 roc_knn <- roc(y_validation, knn_pred_prob)
 
-
-# Create plots
-
+# Plot ROC curves
 plot.roc(roc_rf, 
          col = "red",
          main = "ROC Curves Comparison",
@@ -573,43 +605,44 @@ plot.roc(roc_glm,
          add = TRUE, 
          lwd = 2)
 
-plot.roc(roc_svm, 
-       #  col = "green", 
-       #  add = TRUE, 
-        # lwd = 2)
+plot.roc(roc_svm_linear, 
+         col = "green", 
+         add = TRUE, 
+         lwd = 2)
 
 plot.roc(roc_knn, 
          col = "purple", 
          add = TRUE, 
          lwd = 2)
 
-# Add a legend with the AUC values
-
+# Add legend
 legend("bottomright", 
        legend = c(paste0("Random Forest (AUC = ", round(auc(roc_rf), 3), ")"),
                   paste0("GLMnet Lasso (AUC = ", round(auc(roc_glm), 3), ")"),
-                  paste0("SVM Radial (AUC = ", round(auc(roc_svm), 3), ")"),
-                  paste0("KNN (AUC = ", round(auc(roc_knn), 3), ")")),
+                  paste0("SVM Linear (AUC = ", round(auc(roc_svm_linear), 3), ")"),
+                  paste0("KNN Base (AUC = ", round(auc(roc_knn), 3), ")")),
        col = c("red", "blue", "green", "purple"),
        lwd = 2)
 
 
 
-## Create plot for accuracy of top models
+## Plot for top accuracy models
 
-# Get accuracy from confusion matrices
+# accuracy from confusion matrices
+
 glm_accuracy <- confusion_matrixglml$overall['Accuracy']
 rf_accuracy <- confusion_matrix_tunedrf$overall['Accuracy']
-knn_accuracy <- confusion_matrixknn13$overall['Accuracy']
-svm_accuracy <- confusion_matrix_tunedsvmr$overall['Accuracy']
+knn_accuracy <- confusion_matrixknn$overall['Accuracy']
+svm_accuracy <- confusion_matrix_svml$overall['Accuracy']
 
-# Create data frame with actual values
+# data frame with values
+
 model_performance <- data.frame(
-  Model = c("GLMnet Lasso", "Random Forest Tuned", "KNN k=13", "SVM Radial"),
+  Model = c("GLMnet Lasso", "Random Forest Final", "KNN Base", "SVM Linear"),
   Accuracy = c(glm_accuracy, rf_accuracy, knn_accuracy, svm_accuracy)
 )
 
-# Create plot
+# Accuracy plot
 
 ggplot(model_performance, aes(x = reorder(Model, -Accuracy), y = Accuracy)) +
   geom_bar(stat = "identity", 
