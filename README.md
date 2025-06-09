@@ -62,3 +62,7 @@ HTRU2 Dataset features:
 
 ## Author
 James Fothergill (v8255920)
+
+  Click on the thumbnail to view the Demonstration video
+
+[![YouTube Video Thumbnail](https://img.youtube.com/vi/Q2Xlj-bNVhc/0.jpg)](https://www.youtube.com/watch?v=Q2Xlj-bNVhc)
