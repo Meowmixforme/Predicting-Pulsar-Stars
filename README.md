@@ -15,7 +15,7 @@ An advanced machine learning project focused on automated pulsar detection in ra
 - Comprehensive data preprocessing pipeline
 - Advanced model evaluation and comparison
 - Handling of class imbalance
-- Performance optimization through hyperparameter tuning
+- Performance optimisation through hyperparameter tuning
 
 ## Results
 - Best performing model: Random Forest
@@ -37,7 +37,7 @@ HTRU2 Dataset features:
 - Data preprocessing:
   - Feature scaling
   - Class balancing
-  - Parameter optimization
+  - Parameter optimisation
 - Model evaluation:
   - 10-fold cross-validation
   - ROC curve analysis
