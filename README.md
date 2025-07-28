@@ -1,6 +1,6 @@
 # Pulsar Detection Using Machine Learning
 
-<img width="1024" height="1024" alt="freepik__the-style-is-candid-image-photography-with-natural__11754" src="https://github.com/user-attachments/assets/fd484a79-b383-4e29-bd62-1cb23bbe3089" />
+<img width="500" height="500" alt="freepik__the-style-is-candid-image-photography-with-natural__11754" src="https://github.com/user-attachments/assets/fd484a79-b383-4e29-bd62-1cb23bbe3089" />
 
 
 ## Overview
