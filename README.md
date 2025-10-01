@@ -63,8 +63,7 @@ HTRU2 Dataset features:
 - Integration with larger datasets
 - Enhanced feature engineering
 
-## Author
-James Fothergill (v8255920)
+
 
   Click on the thumbnail to view the Demonstration video
 
